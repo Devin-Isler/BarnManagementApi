@@ -11,7 +11,7 @@ namespace BarnManagementApi.Models.Domain
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        public int Lifetime { get; set; } // in hours
+        public int Lifetime { get; set; } // in minutes
 
         [Required]
         public int ProductionInterval { get; set; } // in minutes
@@ -22,7 +22,10 @@ namespace BarnManagementApi.Models.Domain
         [Required]
         public decimal SellPrice { get; set; }
 
+        public bool IsActive { get; set; } = true; 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? SoldAt { get; set; }
         public DateTime? LastProductionTime { get; set; }
         public DateTime? DeathTime { get; set; }
 

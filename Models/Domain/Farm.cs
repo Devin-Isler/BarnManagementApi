@@ -13,8 +13,8 @@ namespace BarnManagementApi.Models.Domain
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        [MaxLength(500)]
-        public string? Location { get; set; }
+        [Required, MaxLength(500)]
+        public string Location { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastUpdatedAt { get; set; }

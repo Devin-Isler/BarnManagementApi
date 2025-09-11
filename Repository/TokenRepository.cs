@@ -26,11 +26,6 @@ namespace BarnManagementApi.Repository
             {
                 roles = new List<string>();
             }
-
-            foreach(var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
             
             var signingKey = configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT signing key is not configured (Jwt:Key).");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));

@@ -25,6 +25,10 @@ namespace BarnManagementApi.Controllers
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var identityUser = new IdentityUser
             {
                 UserName = registerRequestDto.Username,
@@ -35,29 +39,18 @@ namespace BarnManagementApi.Controllers
 
             if(identityResult.Succeeded)
             {
-                // Use provided roles or default to Reader
-                var rolesToAssign = (registerRequestDto.Roles != null && registerRequestDto.Roles.Any())
-                    ? registerRequestDto.Roles.ToList()
-                    : new List<string> { "Reader" };
-
-                // Add roles to user
-                identityResult = await userManager.AddToRolesAsync(identityUser, rolesToAssign);
-
-                if(identityResult.Succeeded)
+                // Create domain User matching Identity Id
+                var domainUser = new User
                 {
-                    // Create domain User matching Identity Id
-                    var domainUser = new User
-                    {
-                        Id = Guid.Parse(identityUser.Id),
-                        Username = identityUser.Email ?? identityUser.UserName ?? string.Empty,
-                        PasswordHash = identityUser.PasswordHash ?? string.Empty,
-                        Balance = 1000
-                    };
-                    await userRepository.CreateAsync(domainUser);
-                    return Ok("User is registered. Please login.");
-                }
+                    Id = Guid.Parse(identityUser.Id),
+                    Username = identityUser.Email ?? identityUser.UserName ?? string.Empty,
+                    PasswordHash = identityUser.PasswordHash ?? string.Empty,
+                    Balance = 0
+                };
+                await userRepository.CreateAsync(domainUser);
+                return Ok("User is registered. Please login.");
             }
-            return BadRequest("Something went wrong.");
+            return BadRequest(identityResult.Errors);
         }
 
 

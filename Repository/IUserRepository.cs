@@ -9,6 +9,7 @@ namespace BarnManagementApi.Repository
         Task<User> CreateAsync(User user);
         Task<User?> UpdateAsync(User user);
         Task<User?> AdjustBalanceAsync(Guid userId, decimal amount);
+        Task<bool> DeleteUserAsync(Guid userId);
     }
 }
 

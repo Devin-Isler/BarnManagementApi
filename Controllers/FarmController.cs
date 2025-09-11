@@ -26,11 +26,12 @@ namespace BarnManagementApi.Controllers
         }
         
         [HttpGet]
-        [Authorize(Roles = "Writer, Reader")]
-        public async Task<IActionResult> GetAllFarms()
+        public async Task<IActionResult> GetAllFarms([FromQuery] string? filterOn, [FromQuery] string? filterQuery,
+         [FromQuery] string? sortBy, [FromQuery] bool? isAscending,
+          [FromQuery] int pageNumber=1, [FromQuery] int pageSize=1000)
         {
             var userId = GetUserId();
-            var barnDomain = await farmRepository.GetFarmsByUserAsync(userId);
+            var barnDomain = await farmRepository.GetFarmsByUserAsync(userId, filterOn,filterQuery, sortBy, isAscending ?? true, pageNumber, pageSize);
 
             // Convert Domain Models to DTOs
             // var regionsDto = new List<RegionDto>();
@@ -54,7 +55,6 @@ namespace BarnManagementApi.Controllers
         // GET: http://localhost:5081/api/region/{id}
         [HttpGet]
         [Route("{id:Guid}")]
-        [Authorize(Roles = "Writer, Reader")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var userId = GetUserId();
@@ -73,7 +73,6 @@ namespace BarnManagementApi.Controllers
         // POST CREATE REGION
         // POST: http://localhost:5081/api/region
         [HttpPost]
-        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> Create([FromBody] FarmAddDto farmAddDto)
         {   
             var userId = GetUserId();
@@ -93,7 +92,6 @@ namespace BarnManagementApi.Controllers
         // PUT: http://localhost:5081/api/region/{id}
         [HttpPut]
         [Route("{id:Guid}")]
-        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] FarmUpdateDto farmUpdateDto)
         {
             var userId = GetUserId();
@@ -114,7 +112,6 @@ namespace BarnManagementApi.Controllers
         // DELETE: http://localhost:5081/api/region/{id}
         [HttpDelete]
         [Route("{id:Guid}")]
-        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var userId = GetUserId();

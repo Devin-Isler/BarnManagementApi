@@ -19,6 +19,8 @@ namespace BarnManagementApi.Mapping
             CreateMap<Product, ProductDto>().ReverseMap();
             CreateMap<ProductAddDto, Product>().ReverseMap();
             CreateMap<ProductUpdateDto, Product>().ReverseMap();
+
+            CreateMap<User, UserDto>().ReverseMap();
         }
     }
 }

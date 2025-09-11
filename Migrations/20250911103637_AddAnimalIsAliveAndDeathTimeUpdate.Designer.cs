@@ -4,6 +4,7 @@ using BarnManagementApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BarnManagementApi.Migrations
 {
     [DbContext(typeof(BarnDbContext))]
-    partial class BarnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250911103637_AddAnimalIsAliveAndDeathTimeUpdate")]
+    partial class AddAnimalIsAliveAndDeathTimeUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,7 +40,7 @@ namespace BarnManagementApi.Migrations
                     b.Property<Guid>("FarmId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsAlive")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastProductionTime")
@@ -59,9 +62,6 @@ namespace BarnManagementApi.Migrations
 
                     b.Property<decimal>("SellPrice")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("SoldAt")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

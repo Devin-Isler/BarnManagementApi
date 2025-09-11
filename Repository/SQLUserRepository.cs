@@ -48,10 +48,34 @@ namespace BarnManagementApi.Repository
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) return null;
-            user.Balance += amount;
+            user.Balance = amount;
             user.UpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync();
             return user;
+        }
+
+        public async Task<bool> DeleteUserAsync(Guid userId)
+        {
+            var farms = await context.Farms.Where(f => f.UserId == userId).ToListAsync();
+            if (farms.Count > 0)
+            {
+                var farmIds = farms.Select(f => f.Id).ToList();
+                var animals = await context.Animals.Where(a => farmIds.Contains(a.FarmId)).ToListAsync();
+                if (animals.Count > 0)
+                {
+                    context.Animals.RemoveRange(animals);
+                }
+                context.Farms.RemoveRange(farms);
+            }
+
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                context.Users.Remove(user);
+            }
+
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }

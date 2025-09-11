@@ -13,7 +13,7 @@ namespace BarnManagementApi.Models.Domain
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
-        public decimal Balance { get; set; } = 1000; // starting balance
+        public decimal Balance { get; set; } = 0; // starting balance
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

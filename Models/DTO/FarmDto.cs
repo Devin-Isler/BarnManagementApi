@@ -14,7 +14,8 @@ namespace BarnManagementApi.Models.DTO
 
         public DateTime? LastUpdatedAt { get; set; }
     
-        public string? Location { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public List<AnimalDto> Animals { get; set; } = new List<AnimalDto>();
     }
     public class FarmUpdateDto
     {
@@ -24,8 +25,8 @@ namespace BarnManagementApi.Models.DTO
         [MaxLength(500)]
         public string? Description { get; set; }
         
-        [MaxLength(500)]
-        public string? Location { get; set; }
+        [Required, MaxLength(500)]
+        public string Location { get; set; } = string.Empty;
     }
     public class FarmAddDto
     {
@@ -35,9 +36,7 @@ namespace BarnManagementApi.Models.DTO
 
         [MaxLength(500)]
         public string? Description { get; set; }
-
-        public string? Location { get; set; }
+        [Required, MaxLength(500)]
+        public string Location { get; set; } = string.Empty;
     }
 }
-
-

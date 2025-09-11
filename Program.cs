@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using BarnManagementApi.Mapping;
 using BarnManagementApi.Repository;
-using BarnManagementApi.Services;
-using BarnManagementApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -67,15 +65,9 @@ builder.Services.AddScoped<IProductRepository, SQLProductRepository>();
 builder.Services.AddScoped<IUserRepository, SQLUserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
-// Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IFarmService, FarmService>();
-builder.Services.AddScoped<IAnimalService, AnimalService>();
-builder.Services.AddScoped<IProductService, ProductService>();
-
 builder.Services.AddIdentityCore<IdentityUser>()
 .AddRoles<IdentityRole>()
-.AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Region")
+.AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Farm")
 .AddEntityFrameworkStores<BarnAuthDbContext>()
 .AddDefaultTokenProviders();
 builder.Services.Configure<IdentityOptions>(options =>

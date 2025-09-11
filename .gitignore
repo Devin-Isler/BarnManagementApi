@@ -15,5 +15,4 @@ obj/
 # Others
 *.log
 # .gitignore
-Services/
-/config/localsettings.json
+Services
