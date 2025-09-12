@@ -1,5 +1,6 @@
 using BarnManagementApi.Data;
 using BarnManagementApi.Models.Domain;
+using BarnManagementApi.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace BarnManagementApi.Repository
@@ -22,8 +23,6 @@ namespace BarnManagementApi.Repository
         int pageNumber = 1, 
         int pageSize = 1000)
         {   
-            await MarkExpiredAsDeadAsync();
-
             var animal = context.Animals
                 .Include(a => a.Farm)
                 .Where(a => a.Farm != null && a.Farm.UserId == userId)
@@ -57,24 +56,39 @@ namespace BarnManagementApi.Repository
                 // Default: sadece aktif hayvanlar
                 animal = animal.Where(x => x.IsActive);
             }
+            // Sorting
+            if(string.IsNullOrWhiteSpace(sortBy) == false)
+            {
+                if (sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    animal = isAscending ? animal.OrderBy(x => x.Name): animal.OrderByDescending(x => x.Name);
+                }
+                if(sortBy.Equals("LastProduction", StringComparison.OrdinalIgnoreCase))
+                {
+                    animal = isAscending ? animal.OrderBy(x => x.LastProductionTime): animal.OrderByDescending(x => x.LastProductionTime);
+                }
+                if(sortBy.Equals("CreatedAt", StringComparison.OrdinalIgnoreCase))
+                {
+                    animal = isAscending ? animal.OrderBy(x => x.CreatedAt): animal.OrderByDescending(x => x.CreatedAt);
+                }
+            }
 
             // Paging
             var skipResults = (pageNumber - 1) * pageSize;
             return await animal
+                .Include(f => f.Products)
                 .Skip(skipResults)
                 .Take(pageSize)
                 .ToListAsync();
         }
 
-
-
         public async Task<Animal?> GetAnimalByIdAsync(Guid id)
         {
-            await MarkExpiredAsDeadAsync();
             var now = DateTime.UtcNow;
             return await context.Animals
                 .Include(a => a.Farm)
-                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive && (x.DeathTime == null || x.DeathTime > now));
+                .Include(f => f.Products)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<Animal?> BuyAnimalAsync(Animal animal)
@@ -98,6 +112,54 @@ namespace BarnManagementApi.Repository
                     }
                 }
             }
+            await context.SaveChangesAsync();
+            return animal;
+        }
+
+        public async Task<Animal?> BuyAnimalByTemplateNameAsync(string templateName, Guid farmId)
+        {
+            var template = await context.AnimalType.FirstOrDefaultAsync(t => t.Name == templateName);
+            if (template == null)
+            {
+                return null;
+            }
+
+            var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == farmId);
+            if (farm == null)
+            {
+                return null;
+            }
+
+            var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
+            if (owner == null)
+            {
+                return null;
+            }
+
+            if (owner.Balance < template.PurchasePrice)
+            {
+                return null;
+            }
+
+            var animal = new Animal
+            {
+                Id = Guid.NewGuid(),
+                Name = template.Name,
+                Lifetime = template.Lifetime,
+                ProductionInterval = template.ProductionInterval,
+                PurchasePrice = template.PurchasePrice,
+                SellPrice = template.DefaultSellPrice,
+                FarmId = farmId,
+                AnimalTypeId = template.Id,
+                CreatedAt = DateTime.UtcNow,
+                LastProductionTime = null,
+                IsActive = true
+            };
+
+            animal.DeathTime = animal.CreatedAt.AddMinutes(animal.Lifetime);
+
+            owner.Balance -= template.PurchasePrice;
+            await context.Animals.AddAsync(animal);
             await context.SaveChangesAsync();
             return animal;
         }
@@ -129,21 +191,8 @@ namespace BarnManagementApi.Repository
             // Recalculate death time from CreatedAt and updated Lifetime
             existing.DeathTime = existing.CreatedAt.AddMinutes(existing.Lifetime);
             
-            // mark as dead if needed
-            if (existing.DeathTime != null && existing.DeathTime <= DateTime.UtcNow)
-            {
-                existing.IsActive = false;
-            }
             await context.SaveChangesAsync();
             return existing;
-        }
-
-        private async Task MarkExpiredAsDeadAsync()
-        {
-            var now = DateTime.UtcNow;
-            await context.Animals
-                .Where(a => a.IsActive && a.DeathTime != null && a.DeathTime <= now)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, false));
         }
 
         public async Task<Animal?> SellAnimalAsync(Guid id)
@@ -154,17 +203,17 @@ namespace BarnManagementApi.Repository
             {
                 return null;
             }
-            existing.SoldAt = DateTime.UtcNow; 
             var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == existing.FarmId);
             if (farm != null)
             {
                 var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
                 if (owner != null)
                 {
+                    existing.SoldAt = DateTime.UtcNow; 
                     owner.Balance += existing.SellPrice;
+                    existing.IsActive = false;
                 }
             }
-            existing.IsActive = false;
             await context.SaveChangesAsync();
             return existing;
         }
@@ -180,6 +229,5 @@ namespace BarnManagementApi.Repository
             await context.SaveChangesAsync();
             return existing;
         }
-
     }
 }

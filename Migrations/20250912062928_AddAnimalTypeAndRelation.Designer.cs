@@ -4,6 +4,7 @@ using BarnManagementApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BarnManagementApi.Migrations
 {
     [DbContext(typeof(BarnDbContext))]
-    partial class BarnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250912062928_AddAnimalTypeAndRelation")]
+    partial class AddAnimalTypeAndRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,11 +61,9 @@ namespace BarnManagementApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("PurchasePrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("SellPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("SoldAt")
@@ -84,7 +85,6 @@ namespace BarnManagementApi.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("DefaultSellPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Lifetime")
@@ -101,14 +101,12 @@ namespace BarnManagementApi.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("ProducedProductSellPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProductionInterval")
                         .HasColumnType("int");
 
                     b.Property<decimal>("PurchasePrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -167,16 +165,12 @@ namespace BarnManagementApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsSold")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("SoldAt")
@@ -189,58 +183,6 @@ namespace BarnManagementApi.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("BarnManagementApi.Models.Domain.ProductType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("DefaultSellPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProductTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            DefaultSellPrice = 1m,
-                            Name = "Egg"
-                        },
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
-                            DefaultSellPrice = 3m,
-                            Name = "Milk"
-                        },
-                        new
-                        {
-                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
-                            DefaultSellPrice = 4m,
-                            Name = "Wool"
-                        },
-                        new
-                        {
-                            Id = new Guid("99999999-9999-9999-9999-999999999999"),
-                            DefaultSellPrice = 2m,
-                            Name = "Goat Milk"
-                        },
-                        new
-                        {
-                            Id = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
-                            DefaultSellPrice = 2m,
-                            Name = "Duck Egg"
-                        });
-                });
-
             modelBuilder.Entity("BarnManagementApi.Models.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -248,7 +190,6 @@ namespace BarnManagementApi.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Balance")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")

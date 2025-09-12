@@ -16,8 +16,7 @@ namespace BarnManagementApi.Models.Domain
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? SoldAt { get; set; }
 
-        [NotMapped]
-        public bool IsSold => SoldAt != null;
+        public bool IsSold { get; set; }
 
         // Foreign Key → Animal
         [Required]

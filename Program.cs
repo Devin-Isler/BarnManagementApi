@@ -1,6 +1,5 @@
 using BarnManagementApi.Data;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
 using BarnManagementApi.Mapping;
 using BarnManagementApi.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,17 +7,31 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using BarnManagementApi.Services;
+using Serilog;
+using Serilog.Events;
+using Microsoft.AspNetCore.Diagnostics;
+using BarnManagementApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("Logs/BarnLog.txt", rollingInterval: RollingInterval.Day);
+});  
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo {Title = "Region Api", Version = "v1"});
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo {Title = "BarnManagement Api", Version = "v1"});
     options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -46,7 +59,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<BarnDbContext>(options =>
@@ -64,6 +76,10 @@ builder.Services.AddScoped<IAnimalRepository, SQLAnimalRepository>();
 builder.Services.AddScoped<IProductRepository, SQLProductRepository>();
 builder.Services.AddScoped<IUserRepository, SQLUserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+
+// Background services
+builder.Services.AddHostedService<ProductService>();
+builder.Services.AddHostedService<AnimalServices>();
 
 builder.Services.AddIdentityCore<IdentityUser>()
 .AddRoles<IdentityRole>()
@@ -104,6 +120,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "Handled {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+});
 
 app.UseHttpsRedirection();
 

@@ -13,7 +13,7 @@ namespace BarnManagementApi.Mapping
             CreateMap<FarmUpdateDto, Farm>().ReverseMap();
 
             CreateMap<Animal, AnimalDto>().ReverseMap();
-            CreateMap<AnimalAddDto, Animal>().ReverseMap();
+            CreateMap<AnimalBuyDto, Animal>().ReverseMap();
             CreateMap<AnimalUpdateDto, Animal>().ReverseMap();
 
             CreateMap<Product, ProductDto>().ReverseMap();

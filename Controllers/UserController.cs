@@ -36,7 +36,7 @@ namespace BarnManagementApi.Controllers
         }
 
         // PUT: api/user
-        [HttpPut]
+        [HttpPut("update/me")]
         public async Task<IActionResult> UpdateMe([FromBody] UserUpdateDto request)
         {
             var userId = GetUserId();

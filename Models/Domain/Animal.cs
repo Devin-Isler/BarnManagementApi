@@ -34,6 +34,11 @@ namespace BarnManagementApi.Models.Domain
         public Guid FarmId { get; set; }
         public virtual Farm Farm { get; set; } = null!;
 
+        // Foreign Key → AnimalTemplate
+        [Required]
+        public Guid AnimalTypeId { get; set; }
+        public virtual AnimalType AnimalType { get; set; } = null!;
+
         // 1 Animal → N Products
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
