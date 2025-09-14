@@ -1,7 +1,11 @@
+// Animal DTOs - Data Transfer Objects for animal-related API operations
+// Used for sending animal data between client and server
+
 using System.ComponentModel.DataAnnotations;
 
 namespace BarnManagementApi.Models.DTO
 {
+    // DTO for returning animal data to client
     public class AnimalDto
     {
         public Guid Id { get; set; }
@@ -19,6 +23,7 @@ namespace BarnManagementApi.Models.DTO
         public List<ProductDto> Products { get; set; } = new();
     }
 
+    // DTO for buying a new animal
     public class AnimalBuyDto
     {
         [Required]
@@ -29,19 +34,10 @@ namespace BarnManagementApi.Models.DTO
         public Guid FarmId { get; set; }
     }
 
+    // DTO for updating an existing animal
     public class AnimalUpdateDto
     {
         [MaxLength(100)]
         public string? Name { get; set; }
-        [Range(0, int.MaxValue, ErrorMessage = "Value must be positive or zero.")]
-        public int? Lifetime { get; set; }
-        [Range(0, int.MaxValue, ErrorMessage = "Value must be positive or zero.")]
-        public int? ProductionInterval { get; set; }
-        [Range(0, int.MaxValue, ErrorMessage = "Value must be positive or zero.")]
-        public decimal? PurchasePrice { get; set; }
-        [Range(0, int.MaxValue, ErrorMessage = "Value must be positive or zero.")]
-        public decimal? SellPrice { get; set; }
-
-        public Guid? FarmId { get; set; }
     }
 }

@@ -1,3 +1,6 @@
+// Barn Database Context - Main database context for farm management data
+// Handles all domain entities and their relationships
+
 using BarnManagementApi.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +12,7 @@ namespace BarnManagementApi.Data
         {
         }
 
+        // Database tables for domain entities
         public DbSet<Farm> Farms { get; set; }
         public DbSet<Animal> Animals { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -16,11 +20,12 @@ namespace BarnManagementApi.Data
         public DbSet<AnimalType> AnimalType { get; set; }
         public DbSet<ProductType> ProductTypes { get; set; }
 
+        // Configure entity relationships and constraints
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Decimal precisions
+            // Set decimal precision for all money fields (18 digits, 2 decimal places)
             modelBuilder.Entity<Animal>()
                 .Property(a => a.PurchasePrice).HasPrecision(18, 2);
             modelBuilder.Entity<Animal>()
@@ -42,19 +47,19 @@ namespace BarnManagementApi.Data
             modelBuilder.Entity<User>()
                 .Property(u => u.Balance).HasPrecision(18, 2);
 
-            // Unique Name for AnimalTemplate
+            // Ensure animal type names are unique
             modelBuilder.Entity<AnimalType>()
                 .HasIndex(t => t.Name)
                 .IsUnique();
 
-            // Relationship Animal -> AnimalTemplate
+            // Configure relationship between Animal and AnimalType
             modelBuilder.Entity<Animal>()
                 .HasOne(a => a.AnimalType)
                 .WithMany(t => t.Animals)
                 .HasForeignKey(a => a.AnimalTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Seed ProductTypes with deterministic IDs
+            // Seed initial product types with fixed IDs for consistency
             var eggTypeId = new Guid("66666666-6666-6666-6666-666666666666");
             var milkTypeId = new Guid("77777777-7777-7777-7777-777777777777");
             var woolTypeId = new Guid("88888888-8888-8888-8888-888888888888");

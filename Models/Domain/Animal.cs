@@ -1,3 +1,6 @@
+// Animal Domain Model - Represents an animal in the farm management system
+// Contains all properties and relationships for animal entities
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -5,6 +8,7 @@ namespace BarnManagementApi.Models.Domain
 {
     public class Animal
     {
+        // Primary key
         public Guid Id { get; set; }
 
         [Required, MaxLength(100)]
@@ -29,17 +33,17 @@ namespace BarnManagementApi.Models.Domain
         public DateTime? LastProductionTime { get; set; }
         public DateTime? DeathTime { get; set; }
 
-        // Foreign Key → Farm
+        // Foreign Key → Farm (which farm owns this animal)
         [Required]
         public Guid FarmId { get; set; }
         public virtual Farm Farm { get; set; } = null!;
 
-        // Foreign Key → AnimalTemplate
+        // Foreign Key → AnimalType (what type of animal this is)
         [Required]
         public Guid AnimalTypeId { get; set; }
         public virtual AnimalType AnimalType { get; set; } = null!;
 
-        // 1 Animal → N Products
+        // Navigation property - all products this animal has produced
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

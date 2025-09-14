@@ -1,3 +1,6 @@
+// Product Domain Model - Represents a product produced by animals
+// Contains all properties and relationships for product entities
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -5,6 +8,7 @@ namespace BarnManagementApi.Models.Domain
 {
     public class Product
     {
+        // Primary key
         public Guid Id { get; set; }
 
         [Required, MaxLength(100)]
@@ -18,7 +22,7 @@ namespace BarnManagementApi.Models.Domain
 
         public bool IsSold { get; set; }
 
-        // Foreign Key → Animal
+        // Foreign Key → Animal (which animal produced this product)
         [Required]
         public Guid AnimalId { get; set; }
         public virtual Animal Animal { get; set; } = null!;

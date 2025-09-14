@@ -1,7 +1,11 @@
+// User DTOs - Data Transfer Objects for user-related API operations
+// Used for sending user data between client and server
+
 using System.ComponentModel.DataAnnotations;
 
 namespace BarnManagementApi.Models.DTO
 {
+    // DTO for returning user data to client
     public class UserDto
     {   
         public Guid Id { get; set; }
@@ -10,7 +14,8 @@ namespace BarnManagementApi.Models.DTO
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
-
+    
+    // DTO for updating a new user
     public class UserUpdateDto
     {
         [MaxLength(50)]
@@ -22,6 +27,7 @@ namespace BarnManagementApi.Models.DTO
         public string? Password { get; set; }
     }
 
+    // DTO for adjusting user balance
     public class AdjustBalanceDto
     {
         [Required]
@@ -29,6 +35,7 @@ namespace BarnManagementApi.Models.DTO
 
         public decimal Amount { get; set; }
     }
+
 }
 
 

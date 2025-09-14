@@ -1,3 +1,6 @@
+// Farm Domain Model - Represents a farm in the management system
+// Contains all properties and relationships for farm entities
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -5,6 +8,7 @@ namespace BarnManagementApi.Models.Domain
 {
     public class Farm
     {
+        // Primary key
         public Guid Id { get; set; }
 
         [Required, MaxLength(100)]
@@ -19,12 +23,12 @@ namespace BarnManagementApi.Models.Domain
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastUpdatedAt { get; set; }
 
-        // Foreign Key → User
+        // Foreign Key → User (who owns this farm)
         [Required]
         public Guid UserId { get; set; }
         public virtual User User { get; set; } = null!;
 
-        // 1 Farm → N Animals
+        // Navigation property - all animals in this farm
         public virtual ICollection<Animal> Animals { get; set; } = new List<Animal>();
     }
 }

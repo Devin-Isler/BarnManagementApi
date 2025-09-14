@@ -1,13 +1,17 @@
+// Product Service - Background service for automatic product generation
+// Handles automatic product creation from animals based on production intervals
+
 using BarnManagementApi.Data;
 using BarnManagementApi.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BarnManagementApi.Services
 {
     public class ProductService : BackgroundService
     {
         private readonly IServiceProvider serviceProvider;
-        private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(20);
+        private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(20); // Check every 20 seconds
         private readonly ILogger<ProductService>? logger;
 
         public ProductService(IServiceProvider serviceProvider)
@@ -16,6 +20,7 @@ namespace BarnManagementApi.Services
             // ILogger cannot be injected directly here without changing DI registration; resolve lazily when needed
         }
 
+        // Main background service execution loop
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -25,7 +30,10 @@ namespace BarnManagementApi.Services
                     using var scope = serviceProvider.CreateScope();
                     var log = scope.ServiceProvider.GetService<ILogger<ProductService>>();
                     log?.LogDebug("ProductService tick started at {UtcNow}", DateTime.UtcNow);
+                    
+                    // Generate products for animals that are due
                     await ProduceDueProductsAsync(stoppingToken);
+                    
                     log?.LogDebug("ProductService tick completed at {UtcNow}", DateTime.UtcNow);
                 }
                 catch
@@ -35,6 +43,7 @@ namespace BarnManagementApi.Services
                     log?.LogError("ProduceDueProductsAsync threw an exception; continuing next tick");
                 }
 
+                // Wait for next check interval
                 try
                 {
                     await Task.Delay(pollInterval, stoppingToken);
@@ -48,6 +57,7 @@ namespace BarnManagementApi.Services
             }
         }
 
+        // Generate products for animals that are due for production
         private async Task ProduceDueProductsAsync(CancellationToken cancellationToken)
         {
             using var scope = serviceProvider.CreateScope();
@@ -56,9 +66,9 @@ namespace BarnManagementApi.Services
             var log = scope.ServiceProvider.GetService<ILogger<ProductService>>();
 
             var now = DateTime.UtcNow;
+            const int batchSize = 100; // Process animals in batches to avoid overwhelming the database
 
-            const int batchSize = 100;
-
+            // Find animals that are due to produce products
             var dueAnimals = await db.Animals
                 .Where(a => a.IsActive)
                 .Where(a =>
@@ -75,6 +85,8 @@ namespace BarnManagementApi.Services
             }
 
             log?.LogInformation("Producing products for {Count} animals", dueAnimals.Count);
+            
+            // Generate products for each due animal
             foreach (var animal in dueAnimals)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -91,6 +103,7 @@ namespace BarnManagementApi.Services
                 }
             }
 
+            // Save all changes to database
             await db.SaveChangesAsync(cancellationToken);
             log?.LogInformation("Saved production changes for {Count} animals", dueAnimals.Count);
         }

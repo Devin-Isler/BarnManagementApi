@@ -1,3 +1,6 @@
+// User Domain Model - Represents a user in the farm management system
+// Contains all properties and relationships for user entities
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -5,6 +8,7 @@ namespace BarnManagementApi.Models.Domain
 {
     public class User
     {
+        // Primary key (matches ASP.NET Identity user ID)
         public Guid Id { get; set; }
 
         [Required, MaxLength(50)]
@@ -18,7 +22,7 @@ namespace BarnManagementApi.Models.Domain
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // 1 User → N Farms
+        // Navigation property - all farms owned by this user
         public virtual ICollection<Farm> Farms { get; set; } = new List<Farm>();
     }
 }

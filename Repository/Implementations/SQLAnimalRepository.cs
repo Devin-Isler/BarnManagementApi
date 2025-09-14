@@ -1,3 +1,6 @@
+// Animal Repository Implementation - Defines data access operations for animals
+// Provides abstraction layer for animal-related database operations
+
 using BarnManagementApi.Data;
 using BarnManagementApi.Models.Domain;
 using BarnManagementApi.Models.DTO;
@@ -7,28 +10,30 @@ namespace BarnManagementApi.Repository
 {
     public class SQLAnimalRepository : IAnimalRepository
     {
-        private readonly BarnDbContext context;
+        // Dependencies for animal operations
+        private readonly BarnDbContext context; // Access database 
 
         public SQLAnimalRepository(BarnDbContext context)
         {
             this.context = context;
         }
 
+        // Retrieves all animals for a user, with optional filtering, sorting, and paging
         public async Task<List<Animal>> GetAllAnimalsAsync(
-        Guid userId, 
-        string? filterOn = null, 
-        string? filterQuery = null, 
-        string? sortBy = null, 
-        bool isAscending = false, 
-        int pageNumber = 1, 
-        int pageSize = 1000)
+            Guid userId, 
+            string? filterOn = null, 
+            string? filterQuery = null, 
+            string? sortBy = null, 
+            bool isAscending = false, 
+            int pageNumber = 1, 
+            int pageSize = 1000)
         {   
             var animal = context.Animals
                 .Include(a => a.Farm)
                 .Where(a => a.Farm != null && a.Farm.UserId == userId)
                 .AsQueryable();
 
-            // Filtering
+            // Apply filtering based on the provided filter field and query
             if (!string.IsNullOrEmpty(filterOn) && !string.IsNullOrEmpty(filterQuery))
             {
                 if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
@@ -53,94 +58,82 @@ namespace BarnManagementApi.Repository
             }
             else
             {
-                // Default: sadece aktif hayvanlar
+                // Default: return only active animals
                 animal = animal.Where(x => x.IsActive);
             }
-            // Sorting
-            if(string.IsNullOrWhiteSpace(sortBy) == false)
+
+            // Apply sorting based on the specified field and direction
+            if (!string.IsNullOrWhiteSpace(sortBy))
             {
                 if (sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
                 {
-                    animal = isAscending ? animal.OrderBy(x => x.Name): animal.OrderByDescending(x => x.Name);
+                    animal = isAscending ? animal.OrderBy(x => x.Name) : animal.OrderByDescending(x => x.Name);
                 }
-                if(sortBy.Equals("LastProduction", StringComparison.OrdinalIgnoreCase))
+                if (sortBy.Equals("LastProduction", StringComparison.OrdinalIgnoreCase))
                 {
-                    animal = isAscending ? animal.OrderBy(x => x.LastProductionTime): animal.OrderByDescending(x => x.LastProductionTime);
+                    animal = isAscending ? animal.OrderBy(x => x.LastProductionTime) : animal.OrderByDescending(x => x.LastProductionTime);
                 }
-                if(sortBy.Equals("CreatedAt", StringComparison.OrdinalIgnoreCase))
+                if (sortBy.Equals("CreatedAt", StringComparison.OrdinalIgnoreCase))
                 {
-                    animal = isAscending ? animal.OrderBy(x => x.CreatedAt): animal.OrderByDescending(x => x.CreatedAt);
+                    animal = isAscending ? animal.OrderBy(x => x.CreatedAt) : animal.OrderByDescending(x => x.CreatedAt);
                 }
             }
 
-            // Paging
+            // Apply pagination
             var skipResults = (pageNumber - 1) * pageSize;
             return await animal
-                .Include(f => f.Products)
+                .Include(f => f.Products) // Include related products
                 .Skip(skipResults)
                 .Take(pageSize)
                 .ToListAsync();
         }
 
+        // Retrieve a single active animal by its ID, including its farm and products
         public async Task<Animal?> GetAnimalByIdAsync(Guid id)
         {
-            var now = DateTime.UtcNow;
             return await context.Animals
                 .Include(a => a.Farm)
                 .Include(f => f.Products)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive);
         }
 
+        // Buy a new animal and deduct purchase price from owner's balance
         public async Task<Animal?> BuyAnimalAsync(Animal animal)
         {
             await context.Animals.AddAsync(animal);
             animal.DeathTime = animal.CreatedAt.AddMinutes(animal.Lifetime);
-            // Adjust owner's balance based on the animal's farm owner
+
+            // Adjust owner's balance
             var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == animal.FarmId);
             if (farm != null)
             {
                 var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
                 if (owner != null)
                 {
-                    if(owner.Balance < animal.PurchasePrice)
+                    if (owner.Balance < animal.PurchasePrice) // Check if the balance is sufficient
                     {
-                        return null;
+                        return null; // Not enough balance
                     }
-                    else
-                    {
-                        owner.Balance -= animal.PurchasePrice;
-                    }
+                    owner.Balance -= animal.PurchasePrice; // Make the purchase
                 }
             }
             await context.SaveChangesAsync();
             return animal;
         }
 
+        // Buy animal using a predefined template
         public async Task<Animal?> BuyAnimalByTemplateNameAsync(string templateName, Guid farmId)
         {
-            var template = await context.AnimalType.FirstOrDefaultAsync(t => t.Name == templateName);
-            if (template == null)
-            {
-                return null;
-            }
+            var template = await context.AnimalType.FirstOrDefaultAsync(t => t.Name == templateName); // Find the predefined template
+            if (template == null) return null;
 
             var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == farmId);
-            if (farm == null)
-            {
-                return null;
-            }
+            if (farm == null) return null;
 
             var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
-            if (owner == null)
-            {
-                return null;
-            }
+            if (owner == null || owner.Balance < template.PurchasePrice) return null;
 
-            if (owner.Balance < template.PurchasePrice)
-            {
-                return null;
-            }
-
+            // Create animal by default values from the template
             var animal = new Animal
             {
                 Id = Guid.NewGuid(),
@@ -155,7 +148,6 @@ namespace BarnManagementApi.Repository
                 LastProductionTime = null,
                 IsActive = true
             };
-
             animal.DeathTime = animal.CreatedAt.AddMinutes(animal.Lifetime);
 
             owner.Balance -= template.PurchasePrice;
@@ -164,13 +156,12 @@ namespace BarnManagementApi.Repository
             return animal;
         }
 
+        // Update animal details and adjust owner's balance accordingly
         public async Task<Animal?> UpdateAnimalAsync(Guid id, Animal animal)
         {
             var existing = await context.Animals.FirstOrDefaultAsync(x => x.Id == id);
-            if (existing == null)
-            {
-                return null;
-            }
+            if (existing == null) return null;
+
             var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == existing.FarmId);
             if (farm != null)
             {
@@ -181,53 +172,52 @@ namespace BarnManagementApi.Repository
                     owner.Balance -= animal.PurchasePrice;
                 }
             }
+
             existing.Name = animal.Name;
-            existing.Lifetime = animal.Lifetime;
-            existing.ProductionInterval = animal.ProductionInterval;
-            existing.PurchasePrice = animal.PurchasePrice;
-            existing.SellPrice = animal.SellPrice;
-            existing.FarmId = animal.FarmId;
-            existing.LastProductionTime = animal.LastProductionTime;
-            // Recalculate death time from CreatedAt and updated Lifetime
-            existing.DeathTime = existing.CreatedAt.AddMinutes(existing.Lifetime);
-            
             await context.SaveChangesAsync();
             return existing;
         }
 
+        // Sell an animal and add sell price to owner's balance
         public async Task<Animal?> SellAnimalAsync(Guid id)
         {
-            
             var existing = await context.Animals.FirstOrDefaultAsync(x => x.Id == id);
-            if (existing == null)
-            {
-                return null;
-            }
-            var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == existing.FarmId);
+            if (existing == null) return null;
+
+            var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == existing.FarmId); // Check the farm
             if (farm != null)
             {
-                var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
+                var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId); // Check the user
                 if (owner != null)
                 {
-                    existing.SoldAt = DateTime.UtcNow; 
+                    // Adjust necessary variables
+                    existing.SoldAt = DateTime.UtcNow;
                     owner.Balance += existing.SellPrice;
                     existing.IsActive = false;
                 }
             }
+
             await context.SaveChangesAsync();
             return existing;
         }
-        public async Task<Animal?> DeleteAnimalAsync(Guid id)
+
+        // Delete an animal along with its products
+        public async Task<(Animal? animal, int productsCount)> DeleteAnimalAsync(Guid id)
         {
             var existing = await context.Animals.FirstOrDefaultAsync(x => x.Id == id);
-            if (existing == null)
+            if (existing == null) return (null, 0);
+
+            // Check for the products that the animal has
+            var products = await context.Products.Where(p => p.AnimalId == existing.Id).ToListAsync();
+            var productsCount = products.Count;
+            if (products.Count > 0)
             {
-                return null;
+                context.Products.RemoveRange(products);
             }
 
             context.Animals.Remove(existing);
             await context.SaveChangesAsync();
-            return existing;
+            return (existing, productsCount);
         }
     }
 }

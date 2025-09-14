@@ -1,9 +1,13 @@
+// AnimalType Domain Model - Template for creating animals
+// Defines the characteristics and behavior of different animal types
+
 using System.ComponentModel.DataAnnotations;
 
 namespace BarnManagementApi.Models.Domain
 {
     public class AnimalType
     {
+        // Primary key
         public Guid Id { get; set; }
 
         [Required, MaxLength(100)]
@@ -27,6 +31,7 @@ namespace BarnManagementApi.Models.Domain
         [Required]
         public decimal ProducedProductSellPrice { get; set; }
 
+        // Navigation property - all animals of this type
         public virtual ICollection<Animal> Animals { get; set; } = new List<Animal>();
     }
 }
