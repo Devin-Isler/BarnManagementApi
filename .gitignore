@@ -1,16 +1,48 @@
-# Build results
-bin/
-obj/
+# macOS
+.DS_Store
 
-# Visual Studio files
+# IDE
+.idea/
+.vscode/
+*.DotSettings.user
+_ReSharper.Caches/
+
+# .NET build
+[Bb]in/
+[Oo]bj/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 
-# Rider / VSCode
-.idea/
-.vscode/
-
-# Others
+# Logs
+Logs/
 *.log
+
+# App settings & secrets (lokal/dev)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+*.secrets.json
+local.settings.json
+
+# Local DB files
+*.db
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+
+# Test outputs & coverage
+TestResults/
+*.coverage
+*.coveragexml
+coverage/
+coverage*.json
+lcov.info
+
+# Temp files
+*.tmp
+*.swp
+Thumbs.db
