@@ -49,7 +49,7 @@ namespace BarnManagementApi.Controllers
         }
 
         // Get a specific animal by ID
-        [HttpGet("seach/{id:Guid}")]
+        [HttpGet("search/{id:Guid}")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var userId = GetUserId();
@@ -142,8 +142,7 @@ namespace BarnManagementApi.Controllers
         }
 
         // Delete an animal and all its products
-        [HttpDelete]
-        [Route("{id:Guid}")]
+        [HttpDelete("delete/{id:Guid}")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {   
             var userId = GetUserId();

@@ -112,8 +112,7 @@ namespace BarnManagementApi.Controllers
         }
 
         // Delete a farm
-        [HttpDelete]
-        [Route("{id:Guid}")]
+        [HttpDelete("delete/{id:Guid}")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var userId = GetUserId();

@@ -113,8 +113,7 @@ namespace BarnManagementApi.Controllers
         }
 
         // Delete a product
-        [HttpDelete]
-        [Route("{id:Guid}")]
+        [HttpDelete("delete/{id:Guid}")]
         [Authorize]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
