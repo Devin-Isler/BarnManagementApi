@@ -97,30 +97,6 @@ namespace BarnManagementApi.Repository
                 .FirstOrDefaultAsync(x => x.Id == id && x.IsActive);
         }
 
-        // Buy a new animal and deduct purchase price from owner's balance
-        public async Task<Animal?> BuyAnimalAsync(Animal animal)
-        {
-            await context.Animals.AddAsync(animal);
-            animal.DeathTime = animal.CreatedAt.AddMinutes(animal.Lifetime);
-
-            // Adjust owner's balance
-            var farm = await context.Farms.FirstOrDefaultAsync(f => f.Id == animal.FarmId);
-            if (farm != null)
-            {
-                var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
-                if (owner != null)
-                {
-                    if (owner.Balance < animal.PurchasePrice) // Check if the balance is sufficient
-                    {
-                        return null; // Not enough balance
-                    }
-                    owner.Balance -= animal.PurchasePrice; // Make the purchase
-                }
-            }
-            await context.SaveChangesAsync();
-            return animal;
-        }
-
         // Buy animal using a predefined template
         public async Task<Animal?> BuyAnimalByTemplateNameAsync(string templateName, Guid farmId)
         {
@@ -168,12 +144,9 @@ namespace BarnManagementApi.Repository
                 var owner = await context.Users.FirstOrDefaultAsync(u => u.Id == farm.UserId);
                 if (owner != null)
                 {
-                    owner.Balance += existing.PurchasePrice;
-                    owner.Balance -= animal.PurchasePrice;
+                    existing.Name = animal.Name;
                 }
             }
-
-            existing.Name = animal.Name;
             await context.SaveChangesAsync();
             return existing;
         }

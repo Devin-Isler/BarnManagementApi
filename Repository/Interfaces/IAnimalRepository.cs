@@ -14,9 +14,6 @@ namespace BarnManagementApi.Repository
         // Get a specific animal by ID
         Task<Animal?> GetAnimalByIdAsync(Guid id);
         
-        // Buy an animal (create new animal instance)
-        Task<Animal?> BuyAnimalAsync(Animal animal);
-        
         // Buy an animal using template name and farm ID
         Task<Animal?> BuyAnimalByTemplateNameAsync(string templateName, Guid farmId);
         

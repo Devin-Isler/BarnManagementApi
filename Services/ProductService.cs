@@ -12,7 +12,6 @@ namespace BarnManagementApi.Services
     {
         private readonly IServiceProvider serviceProvider;
         private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(20); // Check every 20 seconds
-        private readonly ILogger<ProductService>? logger;
 
         public ProductService(IServiceProvider serviceProvider)
         {
@@ -58,7 +57,7 @@ namespace BarnManagementApi.Services
         }
 
         // Generate products for animals that are due for production
-        private async Task ProduceDueProductsAsync(CancellationToken cancellationToken)
+        public async Task ProduceDueProductsAsync(CancellationToken cancellationToken)
         {
             using var scope = serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<BarnDbContext>();

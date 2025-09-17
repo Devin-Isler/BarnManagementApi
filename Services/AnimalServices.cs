@@ -11,7 +11,6 @@ namespace BarnManagementApi.Services
     {
         private readonly IServiceProvider serviceProvider;
         private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(20); // Check every 20 seconds
-        private readonly ILogger<AnimalServices>? logger;
 
         public AnimalServices(IServiceProvider serviceProvider)
         {
@@ -30,8 +29,25 @@ namespace BarnManagementApi.Services
                     log?.LogDebug("AnimalServices tick started at {UtcNow}", DateTime.UtcNow);
                 }
                 
-                // Check for animals that should be marked as dead
-                await MarkExpiredAsDeadAsync(stoppingToken);
+                // Identify animals whose death time has passed
+                var expiredIds = await MarkExpiredAsDeadAsync(stoppingToken);
+
+                // Persist changes here (keep detection and persistence separate)
+                if (expiredIds.Count > 0)
+                {
+                    using var scope = serviceProvider.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<BarnDbContext>();
+                    var log = scope.ServiceProvider.GetService<ILogger<AnimalServices>>();
+
+                    var affected = await db.Animals
+                        .Where(a => expiredIds.Contains(a.Id))
+                        .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, false), stoppingToken);
+
+                    if (affected > 0)
+                    {
+                        log?.LogInformation("Marked {Count} animals as inactive due to death time passed", affected);
+                    }
+                }
                 
                 // Wait for next check interval
                 try
@@ -47,23 +63,20 @@ namespace BarnManagementApi.Services
             }
         }
 
-        // Mark animals as dead when their death time has passed
-        private async Task MarkExpiredAsDeadAsync(CancellationToken cancellationToken)
+        // Returns the IDs of animals whose death time has passed and are currently active
+        public async Task<List<Guid>> MarkExpiredAsDeadAsync(CancellationToken cancellationToken)
         {
             using var scope = serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<BarnDbContext>();
-            var log = scope.ServiceProvider.GetService<ILogger<AnimalServices>>();
             var now = DateTime.UtcNow;
             
-            // Find animals that should be marked as dead
-            var affected = await db.Animals
+            // Identify animals that should be marked inactive (no persistence here)
+            var ids = await db.Animals
                 .Where(a => a.IsActive && a.DeathTime != null && a.DeathTime <= now)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, false), cancellationToken);
-                
-            if (affected > 0) // Check if any animals were marked as dead
-            {
-                log?.LogInformation("Marked {Count} animals as inactive due to death time passed", affected);
-            }
+                .Select(a => a.Id)
+                .ToListAsync(cancellationToken);
+
+            return ids;
         }
     }
 }
